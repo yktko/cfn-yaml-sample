@@ -1,0 +1,134 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: sample CFn template with YAML - VPC
+
+Resources:
+  SampleBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: ohmurayu-sample-bucket
+
+  CFnVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      InstanceTenancy: default
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: My-CFnVPC
+
+  PubSub1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.1.0/24
+      VpcId: !Ref CFnVPC
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      Tags:
+        - Key: Name
+          Value: PubSub1
+
+  PubSub2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.2.0/24
+      VpcId: !Ref CFnVPC
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      Tags:
+        - Key: Name
+          Value: PubSub2
+
+  PrvSub1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.3.0/24
+      VpcId: !Ref CFnVPC
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      Tags:
+        - Key: Name
+          Value: PrvSub1
+
+  PrvSub2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.4.0/24
+      VpcId: !Ref CFnVPC
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      Tags:
+        - Key: Name
+          Value: PrbSub2
+
+
+  CFnVPCIGW:
+    Type: AWS::EC2::InternetGateway
+    Properties: 
+      Tags:
+        - Key: Name
+          Value: My-CFnVPC-IGW
+
+  CFnVPCIGWAttach:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties: 
+      InternetGatewayId: !Ref CFnVPCIGW
+      VpcId: !Ref CFnVPC
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref CFnVPC
+      Tags:
+        - Key: Name
+          Value: Public Route
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: CFnVPCIGW
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref CFnVPCIGW
+
+  PubSub1Assoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PubSub1
+      RouteTableId: !Ref PublicRouteTable
+
+  PubSub2Assoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PubSub2
+      RouteTableId: !Ref PublicRouteTable
+
+Outputs:
+  VPCID:
+    Description: VPC ID for Production
+    Value: !Ref CFnVPC
+    Export:
+      Name: !Sub ${AWS::StackName}-VPCID
+
+  PubSub1:
+    Description: PublicSubnet 1
+    Value: !Ref PubSub1
+    Export:
+      Name: !Sub ${AWS::StackName}-PubSub1
+
+  PubSub2:
+    Description: PublicSubnet 2
+    Value: !Ref PubSub2
+    Export:
+      Name: !Sub ${AWS::StackName}-PubSub2
+
+  PrvSub1:
+    Description: PrivateSubnet 1
+    Value: !Ref PrvSub1
+    Export:
+      Name: !Sub ${AWS::StackName}-PrvSub1
+
+  PrvSub2:
+    Description: PrivateSubnet 2
+    Value: !Ref PrvSub2
+    Export:
+      Name: !Sub ${AWS::StackName}-PrvSub2
+

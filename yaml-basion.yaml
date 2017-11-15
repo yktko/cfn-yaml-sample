@@ -1,0 +1,104 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: sample CFn template with YAML - EC2
+
+Parameters:
+  BaseStackName:
+    Description: VPC Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: yaml-stack2
+
+  SecStackName:
+    Description: Security Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: yaml-stack2-nw
+
+  EIPStackName:
+    Description: EIP Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: yaml-stack-eip
+
+  OSImage:
+    Description: OS Image
+    Type: String
+    MinLength: 12
+    MaxLength: 12
+    Default: ami-47bf0821
+    # Amazon Linux
+    #       ImageId: ami-2a69be4c
+
+  BasionVolumeSnapshot:
+    Description: Basion Volume Snapshot
+    Type: String
+    MinLength: 22
+    MaxLength: 22
+    Default: snap-025ad7a4e8d0b7620
+
+  
+Resources:
+  BasionSrv:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref OSImage
+      InstanceType: t2.micro
+      KeyName: !Ref KeyPair
+      Monitoring: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-basion
+      NetworkInterfaces:
+        - DeleteOnTermination: true
+          Description: Primary network interface
+          DeviceIndex: 0
+          SubnetId:
+            Fn::ImportValue: !Sub ${BaseStackName}-PubSub1
+          GroupSet:
+            - Fn::ImportValue: !Sub ${SecStackName}-SecGrpWeb
+
+  EIPAssociation:
+    Type: "AWS::EC2::EIPAssociation"
+    Properties:
+      AllocationId:
+        Fn::ImportValue: !Sub ${EIPStackName}-BasionEIPAllocationId
+      InstanceId: !Ref BasionSrv
+
+
+  BasionVolume:
+    Type: AWS::EC2::Volume
+    DeletionPolicy: Snapshot
+    DependsOn: BasionSrv
+    Properties:
+      Size: 10
+      VolumeType: gp2
+      AvailabilityZone: !GetAtt BasionSrv.AvailabilityZone
+      SnapshotId: !Ref BasionVolumeSnapshot
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-BasionVolume
+
+  BasionVolumeAttachment:
+    Type: AWS::EC2::VolumeAttachment
+    DependsOn:
+      - BasionVolume
+      - BasionSrv
+    Properties:
+      InstanceId: !Ref BasionSrv
+      VolumeId: !Ref BasionVolume
+      Device: /dev/xvdb
+
+
+Outputs:
+  BasionEC2:
+    Description: Basion EC2 ID
+    Value: !Ref BasionSrv
+    Export:
+      Name: !Sub ${AWS::StackName}-BasionEC2
+  

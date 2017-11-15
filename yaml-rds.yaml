@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: sample CFn template with YAML - RDS
+
+Parameters:
+  BaseStackName:
+    Description: VPC Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: yaml-stack2
+
+  SecStackName:
+    Description: Security Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: yaml-stack2-nw
+
+Resources:
+  DBInstance:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    DependsOn: DBMonitorRole
+    Properties:
+      DBName: MySQLDB
+      Engine: MySQL
+      MultiAZ: true
+      MasterUsername: DBUser
+      MasterUserPassword: DBPassword
+      DBInstanceClass: db.m1.small
+      AllocatedStorage: 20
+      DBSubnetGroupName: !Ref DBSubnetGrp
+      MonitoringInterval: 10
+      MonitoringRoleArn: !GetAtt DBMonitorRole.Arn
+      VPCSecurityGroups:
+        - Fn::ImportValue: !Sub ${SecStackName}-SecGrpDB
+
+
+
+  DBSubnetGrp: 
+    Type: AWS::RDS::DBSubnetGroup
+    Properties: 
+      DBSubnetGroupDescription: DB Subnet Group for Private Subnet
+      SubnetIds: 
+        - Fn::ImportValue: !Sub ${BaseStackName}-PrvSub1
+        - Fn::ImportValue: !Sub ${BaseStackName}-PrvSub2
+
+
+  DBMonitorRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+              - monitoring.rds.amazonaws.com
+          Action:
+            - sts:AssumeRole
+
+Outputs:
+  DBEndpoint:
+    Description: DB Endpoint
+    Value: !GetAtt DBInstance.Endpoint.Address
+    Export:
+      Name: !Sub ${AWS::StackName}-DBEndpoint
+

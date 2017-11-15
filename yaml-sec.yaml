@@ -1,0 +1,93 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: Sample CFn Template - Security
+
+Parameters:
+  BaseStackName:
+    Description: VPC Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: yaml-stack2
+
+Resources:
+  SecGrpLB:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: SecGrpLB
+      GroupDescription: http access
+      VpcId:
+        Fn::ImportValue: !Sub ${BaseStackName}-VPCID
+
+  SecGrpLB1:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref SecGrpLB
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      CidrIp: 0.0.0.0/0
+
+  SecGrpWeb:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: SecGrpWeb
+      GroupDescription: vpc-ope ssh
+      VpcId:
+        Fn::ImportValue: !Sub ${BaseStackName}-VPCID
+
+  SecGrpWebIn1:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref SecGrpWeb
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: 0.0.0.0/0
+  SecGrpWebIn2:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref SecGrpWeb
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      CidrIp: 0.0.0.0/0
+
+  SecGrpDB:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: SecGrpDB
+      GroupDescription: MySQL
+      VpcId:
+        Fn::ImportValue: !Sub ${BaseStackName}-VPCID
+
+  SecGrpDBIn1:
+    Type: AWS::EC2::SecurityGroupIngress
+    DependsOn: SecGrpWeb
+    Properties:
+      GroupId: !Ref SecGrpDB
+      IpProtocol: tcp
+      FromPort: 3306
+      ToPort: 3306
+      SourceSecurityGroupId: !Ref SecGrpWeb
+
+
+Outputs:
+  SecGrpWebID:
+    Description: Security Group for Web
+    Value: !Ref SecGrpWeb
+    Export:
+      Name: !Sub ${AWS::StackName}-SecGrpWeb
+
+  SecGrpLBID:
+    Description: Security Group for LB
+    Value: !Ref SecGrpLB
+    Export:
+      Name: !Sub ${AWS::StackName}-SecGrpLB
+
+  SecGrpDBID:
+    Description: Security Group for DB
+    Value: !Ref SecGrpDB
+    Export:
+      Name: !Sub ${AWS::StackName}-SecGrpDB

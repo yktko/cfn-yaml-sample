@@ -1,0 +1,109 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: sample CFn template with YAML - Aurora
+
+Parameters:
+  BaseStackName:
+    Description: VPC Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: yaml-stack2
+
+  SecStackName:
+    Description: Security Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: yaml-stack2-nw
+
+  DBUser:
+    Description: Database Master User Name
+    Type: String
+    MinLength: 5
+    MaxLength: 255
+    Default: dbuser
+  
+  DBPassword:
+    Description: Database Master User Password
+    Type: String
+    MinLength: 5
+    MaxLength: 255
+    Default: dbpassword
+
+
+Resources:
+  AuroraCluster:
+    Type: AWS::RDS::DBCluster
+    DependsOn: AuroraMonitorRole
+    DeletionPolicy: Snapshot
+    Properties:
+      DatabaseName: AuroraTest
+      Engine: aurora
+      MasterUsername: !Ref DBUser
+      MasterUserPassword: !Ref DBPassword
+      DBSubnetGroupName: !Ref AuroraSubnetGrp
+      VpcSecurityGroupIds:
+        - Fn::ImportValue: !Sub ${SecStackName}-SecGrpDB
+
+  AuroraInstancePrimary:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBName: AuroraTest-1
+      Engine: aurora
+      DBInstanceClass: db.t2.small
+      DBClusterIdentifier: !Ref AuroraCluster
+      MonitoringInterval: 10
+      MonitoringRoleArn: !GetAtt AuroraMonitorRole.Arn
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+
+  AuroraInstanceReplica1:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBName: AuroraTest-2
+      Engine: aurora
+      DBInstanceClass: db.t2.small
+      DBClusterIdentifier: !Ref AuroraCluster
+      MonitoringInterval: 10
+      MonitoringRoleArn: !GetAtt AuroraMonitorRole.Arn
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+
+          
+  AuroraSubnetGrp: 
+    Type: AWS::RDS::DBSubnetGroup
+    Properties: 
+      DBSubnetGroupDescription: DB Subnet Group for Aurora
+      SubnetIds: 
+        - Fn::ImportValue: !Sub ${BaseStackName}-PrvSub1
+        - Fn::ImportValue: !Sub ${BaseStackName}-PrvSub2
+
+
+  AuroraMonitorRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+              - monitoring.rds.amazonaws.com
+          Action:
+            - sts:AssumeRole
+
+Outputs:
+  AuroraEndpoint:
+    Description: Aurora Writer Endpoint
+    Value: !GetAtt AuroraCluster.Endpoint.Address
+    Export:
+      Name: !Sub ${AWS::StackName}-AuroraEndpoint
+
+  AuroraReadEndpoint:
+    Description: Aurora Reader Endpoint
+    Value: !GetAtt AuroraCluster.ReadEndpoint.Address
+    Export:
+      Name: !Sub ${AWS::StackName}-AuroraReadEndpoint

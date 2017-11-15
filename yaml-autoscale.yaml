@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: sample CFn template with YAML - AutoScale
+
+Parameters:
+  BaseStackName:
+    Description: VPC Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: yaml-stack2
+
+  SecStackName:
+    Description: Security Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: yaml-stack2-nw
+
+  DBStackName:
+    Description: DB Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: yaml-stack2-db
+
+  ALBStackName:
+    Description: ALB Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: yaml-stack-alb
+    
+  OSImage:
+    Description: Base AmazonLinux Image
+    Type: String
+    MinLength: 12
+    MaxLength: 12
+    Default: ami-2a69be4c
+
+  
+Resources:
+  WpLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Ref OSImage
+      SecurityGroups:
+        - Fn::ImportValue: !Sub ${SecStackName}-SecGrpWeb
+      InstanceType: t2.micro
+      KeyName: ohmurayu
+      AssociatePublicIpAddress: true
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          sudo yum -y update
+          sudo yum -y install httpd mysql php php-mysql php-mbstring
+          sudo /sbin/chkconfig httpd on
+          sudo /etc/init.d/httpd start
+          wget http://ja.wordpress.org/latest-ja.tar.gz -O /tmp/latest-ja.tar.gz
+          tar xvzf /tmp/latest-ja.tar.gz -C /var/www/html/ --strip-components 1
+          sudo chown apache:apache -R /var/www/html
+
+  WpASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier:
+        - Fn::ImportValue: !Sub ${BaseStackName}-PubSub1
+        - Fn::ImportValue: !Sub ${BaseStackName}-PubSub2
+      LaunchConfigurationName:
+        Ref: WpLC
+      HealthCheckGracePeriod: 300
+      MinSize: '1'
+      MaxSize: '3'
+      TargetGroupARNs:
+        - Fn::ImportValue: !Sub ${ALBStackName}-WpTargetGroupARN
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 0
+        MaxBatchSize: 1
+        PauseTime: PT1M
+

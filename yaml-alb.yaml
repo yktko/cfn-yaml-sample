@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Sample CFn template with YAML - ALB
+
+Parameters:
+  BaseStackName:
+    Description: VPC Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: yaml-stack2
+
+  SecStackName:
+    Description: Security Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: yaml-stack2-nw
+
+
+Resources:
+  WpALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: wpalb
+      Subnets:
+        - Fn::ImportValue: !Sub ${BaseStackName}-PubSub1
+        - Fn::ImportValue: !Sub ${BaseStackName}-PubSub2
+      SecurityGroups: 
+        - Fn::ImportValue: !Sub ${SecStackName}-SecGrpLB
+
+  LoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref WpALB
+      Port: 80
+      Protocol: HTTP 
+      DefaultActions: 
+        - Type: forward
+          TargetGroupArn: !Ref WpALBTargetGroup
+
+  WpALBTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub ${AWS::StackName}-tg
+      VpcId:
+        Fn::ImportValue: !Sub ${BaseStackName}-VPCID
+      Port: 80
+      Protocol: HTTP
+      HealthCheckPath: /readme.html
+      HealthyThresholdCount: 2
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: '20'
+
+Outputs:
+  WpALBDNS:
+    Description: ALB DNS Name
+    Value: !GetAtt WpALB.DNSName
+    Export:
+      Name: !Sub ${AWS::StackName}-WpALBDNS
+  
+  TargetGroupARN:
+    Description: TargetGroup ARN
+    Value: !Ref WpALBTargetGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-WpTargetGroupARN
