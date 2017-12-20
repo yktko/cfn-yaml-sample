@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: sample CFn template with YAML - Basion Data Volume
+
+Parameters:
+  BaseStackName:
+    Description: Base Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: cfnsmpl
+
+  BasionVolumeSnapshot:
+    Description: Basion Volume Snapshot ID
+    Type: String
+    MinLength: 22
+    MaxLength: 22
+
+Resources:
+  BasionVolume:
+    Type: AWS::EC2::Volume
+    DeletionPolicy: Snapshot
+    Properties:
+      Size: 10
+      VolumeType: gp2
+      # fixed configuration to 2nd AZ = Public Subnet 2
+      AvailabilityZone: !Select [ 1, !GetAZs ]
+      SnapshotId: !Ref BasionVolumeSnapshot
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-BasionVolume
+
+Outputs:
+  BasionVolumeID:
+    Description: Basion Volume ID
+    Value: !Ref BasionVolume
+    Export:
+      Name: !Sub ${BaseStackName}-BasionVolumeID
+
