@@ -8,7 +8,7 @@ Parameters:
     MinLength: 1
     MaxLength: 255
     AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
-    Default: yaml-stack2
+    Default: cfnsmpl
 
   SecStackName:
     Description: Security Stack Name
@@ -16,32 +16,28 @@ Parameters:
     MinLength: 1
     MaxLength: 255
     AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
-    Default: yaml-stack2-nw
-
-  EIPStackName:
-    Description: EIP Stack Name
-    Type: String
-    MinLength: 1
-    MaxLength: 255
-    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
-    Default: yaml-stack-eip
+    Default: cfnsmpl-sec
 
   OSImage:
     Description: OS Image
     Type: String
     MinLength: 12
     MaxLength: 12
-    Default: ami-47bf0821
-    # Amazon Linux
-    #       ImageId: ami-2a69be4c
+    Default: ami-2a69be4c
+
 
   BasionVolumeSnapshot:
     Description: Basion Volume Snapshot
     Type: String
     MinLength: 22
     MaxLength: 22
-    Default: snap-025ad7a4e8d0b7620
 
+  KeyPair:
+    Description: KeyPair
+    Type: String
+    MinLength: 1
+    MaxLength: 32
+    
   
 Resources:
   BasionSrv:
@@ -66,8 +62,7 @@ Resources:
   EIPAssociation:
     Type: "AWS::EC2::EIPAssociation"
     Properties:
-      AllocationId:
-        Fn::ImportValue: !Sub ${EIPStackName}-BasionEIPAllocationId
+      AllocationId: !GetAtt BasionIP.AllocationId
       InstanceId: !Ref BasionSrv
 
 
@@ -95,10 +90,15 @@ Resources:
       Device: /dev/xvdb
 
 
+  BasionIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
 Outputs:
-  BasionEC2:
-    Description: Basion EC2 ID
-    Value: !Ref BasionSrv
+  BasionIP:
+    Description: Basion IP
+    Value: !Ref BasionIP
     Export:
-      Name: !Sub ${AWS::StackName}-BasionEC2
-  
+      Name: !Sub ${AWS::StackName}-BasionIP
+

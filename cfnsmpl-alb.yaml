@@ -8,7 +8,7 @@ Parameters:
     MinLength: 1
     MaxLength: 255
     AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
-    Default: yaml-stack2
+    Default: cfnsmpl
 
   SecStackName:
     Description: Security Stack Name
@@ -16,7 +16,7 @@ Parameters:
     MinLength: 1
     MaxLength: 255
     AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
-    Default: yaml-stack2-nw
+    Default: cfnsmpl-sec
 
 
 Resources:
@@ -53,6 +53,7 @@ Resources:
       TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
           Value: '20'
+
 
 Outputs:
   WpALBDNS:

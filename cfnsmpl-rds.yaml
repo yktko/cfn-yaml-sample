@@ -8,7 +8,7 @@ Parameters:
     MinLength: 1
     MaxLength: 255
     AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
-    Default: yaml-stack2
+    Default: cfnsmpl
 
   SecStackName:
     Description: Security Stack Name
@@ -16,8 +16,22 @@ Parameters:
     MinLength: 1
     MaxLength: 255
     AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
-    Default: yaml-stack2-nw
+    Default: cfnsmpl-sec
 
+  DBUser:
+    Description: Database Master User Name
+    Type: String
+    MinLength: 5
+    MaxLength: 20
+
+  DBPassword:
+    Description: Database Master User Password
+    Type: String
+    MinLength: 5
+    MaxLength: 20
+    NoEcho: true
+
+  
 Resources:
   DBInstance:
     Type: AWS::RDS::DBInstance
@@ -27,8 +41,8 @@ Resources:
       DBName: MySQLDB
       Engine: MySQL
       MultiAZ: true
-      MasterUsername: DBUser
-      MasterUserPassword: DBPassword
+      MasterUsername: !Ref DBUser
+      MasterUserPassword: !Ref DBPassword
       DBInstanceClass: db.m1.small
       AllocatedStorage: 20
       DBSubnetGroupName: !Ref DBSubnetGrp

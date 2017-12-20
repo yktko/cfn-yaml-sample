@@ -3,11 +3,6 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: sample CFn template with YAML - VPC
 
 Resources:
-  SampleBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: ohmurayu-sample-bucket
-
   CFnVPC:
     Type: AWS::EC2::VPC
     Properties:
@@ -24,7 +19,7 @@ Resources:
     Properties:
       CidrBlock: 10.0.1.0/24
       VpcId: !Ref CFnVPC
-      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      AvailabilityZone: !Select [ 0, !GetAZs ]
       Tags:
         - Key: Name
           Value: PubSub1
@@ -34,7 +29,7 @@ Resources:
     Properties:
       CidrBlock: 10.0.2.0/24
       VpcId: !Ref CFnVPC
-      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      AvailabilityZone: !Select [ 1, !GetAZs ]
       Tags:
         - Key: Name
           Value: PubSub2
@@ -44,7 +39,7 @@ Resources:
     Properties:
       CidrBlock: 10.0.3.0/24
       VpcId: !Ref CFnVPC
-      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      AvailabilityZone: !Select [ 0, !GetAZs ]
       Tags:
         - Key: Name
           Value: PrvSub1
@@ -54,7 +49,7 @@ Resources:
     Properties:
       CidrBlock: 10.0.4.0/24
       VpcId: !Ref CFnVPC
-      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      AvailabilityZone: !Select [ 1, !GetAZs ]
       Tags:
         - Key: Name
           Value: PrbSub2

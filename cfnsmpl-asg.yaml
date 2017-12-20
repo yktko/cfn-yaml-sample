@@ -8,23 +8,15 @@ Parameters:
     MinLength: 1
     MaxLength: 255
     AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
-    Default: yaml-stack2
-
+    Default: cfnsmpl
+    
   SecStackName:
     Description: Security Stack Name
     Type: String
     MinLength: 1
     MaxLength: 255
     AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
-    Default: yaml-stack2-nw
-
-  DBStackName:
-    Description: DB Stack Name
-    Type: String
-    MinLength: 1
-    MaxLength: 255
-    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
-    Default: yaml-stack2-db
+    Default: cfnsmpl-sec
 
   ALBStackName:
     Description: ALB Stack Name
@@ -32,8 +24,15 @@ Parameters:
     MinLength: 1
     MaxLength: 255
     AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
-    Default: yaml-stack-alb
-    
+    Default: cfnsmpl-alb
+
+  RDSStackName:
+    Description: RDS Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    Default: cfnsmpl-rds
+
   OSImage:
     Description: Base AmazonLinux Image
     Type: String
@@ -41,7 +40,25 @@ Parameters:
     MaxLength: 12
     Default: ami-2a69be4c
 
-  
+  KeyPair:
+    Description: KeyPair
+    Type: String
+    MinLength: 1
+    MaxLength: 32
+
+  DBUser:
+    Description: Database Master User Name
+    Type: String
+    MinLength: 5
+    MaxLength: 20
+
+  DBPassword:
+    Description: Database Master User Password
+    Type: String
+    MinLength: 5
+    MaxLength: 20
+    NoEcho: true
+
 Resources:
   WpLC:
     Type: AWS::AutoScaling::LaunchConfiguration
@@ -50,7 +67,7 @@ Resources:
       SecurityGroups:
         - Fn::ImportValue: !Sub ${SecStackName}-SecGrpWeb
       InstanceType: t2.micro
-      KeyName: ohmurayu
+      KeyName: !Ref KeyPair
       AssociatePublicIpAddress: true
       UserData:
         Fn::Base64: !Sub |

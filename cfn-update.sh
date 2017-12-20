@@ -15,5 +15,4 @@ if [ "$params" != "" ]; then
 fi
 
 cmd="aws cloudformation ${mode}-stack --stack-name ${stack_name} --template-body file://${template} --capabilities CAPABILITY_IAM $params"
-echo ${cmd}
 eval ${cmd}

@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Sample CFn template with YAML - R53 Record - Basion hostname
+
+Parameters:
+  R53StackName:
+    Description: R53 Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: cfnsmpl-r53
+
+  BasionStackName:
+    Description: Basion Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: cfnsmpl-basion
+
+Resources:
+  RecMyDomainBasion:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId:
+        Fn::ImportValue: !Sub ${R53StackName}-MyDomainZoneId
+      RecordSets:
+        - Name: basion.yukitaka.org.
+          Type: A
+          TTL: 300
+          ResourceRecords:
+            - Fn::ImportValue: !Sub ${BasionStackName}-BasionIP
+
+Outputs:
+  BasionDNS:
+    Description: Basion DNS Name
+    Value: !Ref RecMyDomainBasion
+    Export:
+      Name: !Sub ${AWS::StackName}-BasionDNS

@@ -2,51 +2,17 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: sample CFn template with YAML - R53
 
 Resources:
-  ZoneYukitakaOrg:
+  ZoneMyDomain:
     Type: AWS::Route53::HostedZone
     Properties:
       Name: yukitaka.org.
 
-  RecOrgYukitakaRoot:
-    Type: AWS::Route53::RecordSetGroup
-    Properties:
-      HostedZoneId: !Ref ZoneYukitakaOrg
-      RecordSets:
-        - Name: yukitaka.org.
-          Type: A
-          AliasTarget:
-            HostedZoneId: Z2FDTNDATAQYW2
-            DNSName: df6a8i7tb87lo.cloudfront.net
-
-  RecOrgYukitakaStatic:
-    Type: AWS::Route53::RecordSetGroup
-    Properties:
-      HostedZoneId: !Ref ZoneYukitakaOrg
-      RecordSets:
-        - Name: static.yukitaka.org.
-          Type: A
-          AliasTarget:
-            HostedZoneId: Z3AQBSTGFYJSTF
-            DNSName: s3-website-us-east-1.amazonaws.com
-
-  RecOrgYukitakaOp:
-    Type: AWS::Route53::RecordSetGroup
-    Properties:
-      HostedZoneId: !Ref ZoneYukitakaOrg
-      RecordSets:
-        - Name: op.yukitaka.org.
-          Type: A
-          TTL: 300
-          ResourceRecords:
-            - 52.198.223.80
-
-
 Outputs:
-  ZoneIdYukitakaOrg:
-    Description: ZoneId of YukitakaOrg
-    Value: !Ref ZoneYukitakaOrg
+  MyDomainZoneId:
+    Description: ZoneId of MyDomain
+    Value: !Ref ZoneMyDomain
     Export:
-      Name: !Sub ${AWS::StackName}-ZoneIdYukitakaOrg
+      Name: !Sub ${AWS::StackName}-MyDomainZoneId
 
 
 

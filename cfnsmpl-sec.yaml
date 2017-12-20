@@ -9,7 +9,7 @@ Parameters:
     MinLength: 1
     MaxLength: 255
     AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
-    Default: yaml-stack2
+    Default: cfnsmpl
 
 Resources:
   SecGrpLB:
@@ -36,7 +36,6 @@ Resources:
       GroupDescription: vpc-ope ssh
       VpcId:
         Fn::ImportValue: !Sub ${BaseStackName}-VPCID
-
   SecGrpWebIn1:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -61,7 +60,6 @@ Resources:
       GroupDescription: MySQL
       VpcId:
         Fn::ImportValue: !Sub ${BaseStackName}-VPCID
-
   SecGrpDBIn1:
     Type: AWS::EC2::SecurityGroupIngress
     DependsOn: SecGrpWeb
@@ -72,6 +70,67 @@ Resources:
       ToPort: 3306
       SourceSecurityGroupId: !Ref SecGrpWeb
 
+  SecGrpBasion:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: SecGrpBasion
+      GroupDescription: SSH from restricted src
+      VpcId:
+        Fn::ImportValue: !Sub ${BaseStackName}-VPCID
+  SecGrpWebIn1:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref SecGrpBasion
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: 126.147.80.44/32
+      Description: My Home Global
+  SecGrpWebIn2:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref SecGrpBasion
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: 27.0.0.0/16
+      Description: Amazon Internal
+  SecGrpWebIn3:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref SecGrpBasion
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: 54.220.200.0/24
+      Description: Amazon Internal
+  SecGrpWebIn4:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref SecGrpBasion
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: 26.192.0.0/10
+      Description: SoftBank
+  SecGrpWebIn5:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref SecGrpBasion
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: 192.168.3.0/24
+      Description: My Home Private
+  SecGrpWebIn6:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref SecGrpBasion
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: 10.0.0.0/22
+      Description: VPC local
 
 Outputs:
   SecGrpWebID:
@@ -91,3 +150,9 @@ Outputs:
     Value: !Ref SecGrpDB
     Export:
       Name: !Sub ${AWS::StackName}-SecGrpDB
+
+  SecGrpBasionID:
+    Description: Security Group for Basion
+    Value: !Ref SecGrpBasion
+    Export:
+      Name: !Sub ${AWS::StackName}-SecGrpBasion
