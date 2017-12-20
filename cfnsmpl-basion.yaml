@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: sample CFn template with YAML - EC2
+Description: sample CFn template with YAML - Basion Server 
 
 Parameters:
   BaseStackName:
@@ -10,14 +10,6 @@ Parameters:
     AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
     Default: cfnsmpl
 
-  SecStackName:
-    Description: Security Stack Name
-    Type: String
-    MinLength: 1
-    MaxLength: 255
-    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
-    Default: cfnsmpl-sec
-
   OSImage:
     Description: OS Image
     Type: String
@@ -25,20 +17,13 @@ Parameters:
     MaxLength: 12
     Default: ami-2a69be4c
 
-
-  BasionVolumeSnapshot:
-    Description: Basion Volume Snapshot
-    Type: String
-    MinLength: 22
-    MaxLength: 22
-
   KeyPair:
     Description: KeyPair
     Type: String
     MinLength: 1
     MaxLength: 32
-    
-  
+
+
 Resources:
   BasionSrv:
     Type: AWS::EC2::Instance
@@ -55,9 +40,9 @@ Resources:
           Description: Primary network interface
           DeviceIndex: 0
           SubnetId:
-            Fn::ImportValue: !Sub ${BaseStackName}-PubSub1
+            Fn::ImportValue: !Sub ${BaseStackName}-PubSub2
           GroupSet:
-            - Fn::ImportValue: !Sub ${SecStackName}-SecGrpWeb
+            - Fn::ImportValue: !Sub ${BaseStackName}-SecGrpBasion
 
   EIPAssociation:
     Type: "AWS::EC2::EIPAssociation"
@@ -65,28 +50,13 @@ Resources:
       AllocationId: !GetAtt BasionIP.AllocationId
       InstanceId: !Ref BasionSrv
 
-
-  BasionVolume:
-    Type: AWS::EC2::Volume
-    DeletionPolicy: Snapshot
-    DependsOn: BasionSrv
-    Properties:
-      Size: 10
-      VolumeType: gp2
-      AvailabilityZone: !GetAtt BasionSrv.AvailabilityZone
-      SnapshotId: !Ref BasionVolumeSnapshot
-      Tags:
-        - Key: Name
-          Value: !Sub ${AWS::StackName}-BasionVolume
-
   BasionVolumeAttachment:
     Type: AWS::EC2::VolumeAttachment
-    DependsOn:
-      - BasionVolume
-      - BasionSrv
+    DependsOn: BasionSrv
     Properties:
       InstanceId: !Ref BasionSrv
-      VolumeId: !Ref BasionVolume
+      VolumeId:
+        Fn::ImportValue: !Sub ${BaseStackName}-BasionVolumeID
       Device: /dev/xvdb
 
 
@@ -100,5 +70,5 @@ Outputs:
     Description: Basion IP
     Value: !Ref BasionIP
     Export:
-      Name: !Sub ${AWS::StackName}-BasionIP
+      Name: !Sub ${BaseStackName}-BasionIP
 

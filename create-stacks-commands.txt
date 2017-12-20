@@ -1,7 +1,26 @@
-./cfn-update.sh update cfnsmpl-r53    cfnsmpl-r53.yaml
-./cfn-update.sh update cfnsmpl        cfnsmpl-vpc.yaml
-./cfn-update.sh update cfnsmpl-sec    cfnsmpl-sec.yaml         BaseStackName=cfnsmpl
-./cfn-update.sh update cfnsmpl-rds    cfnsmpl-rds.yaml         BaseStackName=cfnsmpl     SecStackName=cfnsmpl-sec DBUser=$(aws ssm get-parameter --name /CfnSmpl/DBUser --with-decryption --query 'Parameter.Value' --output text) DBPassword=$(aws ssm get-parameter --name /CfnSmpl/DBPassword --with-decryption --query 'Parameter.Value' --output text)
-./cfn-update.sh update cfnsmpl-basion cfnsmpl-basion.yaml      BaseStackName=cfnsmpl     SecStackName=cfnsmpl-sec OSImage=ami-47bf0821 BasionVolumeSnapshot=snap-00cdbf9a99c80eb05 R53StackName=cfnsmpl-r53 KeyPair=ohmurayu
-./cfn-update.sh update cfnsmpl-alb    cfnsmpl-alb.yaml         BaseStackName=cfnsmpl     SecStackName=cfnsmpl-sec
-./cfn-update.sh update cfnsmpl-asg    cfnsmpl-asg.yaml   BaseStackName=cfnsmpl     SecStackName=cfnsmpl-sec ALBStackName=cfnsmpl-alb KeyPair=ohmurayu DBUser=$(aws ssm get-parameter --name /CfnSmpl/DBUser --with-decryption --query 'Parameter.Value' --output text) DBPassword=$(aws ssm get-parameter --name /CfnSmpl/DBPassword --with-decryption --query 'Parameter.Value' --output text)
+./cfn-update.sh create cfnbase         cfnsmpl-vpc.yaml
+./cfn-update.sh create cfnbase-sec     cfnsmpl-sec.yaml      BaseStackName=cfnbase
+./cfn-update.sh create cfnbase-rds     cfnsmpl-rds.yaml      BaseStackName=cfnbase  DBUser=mydbuser DBPassword=mydbpassword
+./cfn-update.sh create cfnbase-bas-vol cfnsmpl-bas-vol.yaml  BaseStackName=cfnbase  BasionVolumeSnapshot=snap-00cdbf9a99c80eb05 
+./cfn-update.sh create cfnbase-bas     cfnsmpl-basion.yaml   BaseStackName=cfnbase  OSImage=ami-47bf0821 KeyPair=ohmurayu
+./cfn-update.sh create cfnbase-alb     cfnsmpl-alb.yaml      BaseStackName=cfnbase
+./cfn-update.sh create cfnbase-asg     cfnsmpl-asg.yaml      BaseStackName=cfnbase  KeyPair=ohmurayu DBUser=mydbuser DBPassword=mydbpassword
+
+
+
+
+
+
+## Dependency
+# vpc -> sec -> rds
+#        vol -> basion
+#            -> alb       -> asg
+
+## Basion Root Image and Data Volume
+# please specify your favorite image id
+
+## DB parameters
+## It's better to use ssm parameter store
+# DBUser=$(aws ssm get-parameters --name /CfnSmpl/DBUser --with-decryption --query 'Parameters[0].Value' --output text)
+# DBPassword=$(aws ssm get-parameters --name /CfnSmpl/DBPassword --with-decryption --query 'Parameters[0].Value' --output text)
+

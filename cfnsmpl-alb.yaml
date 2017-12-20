@@ -10,15 +10,6 @@ Parameters:
     AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
     Default: cfnsmpl
 
-  SecStackName:
-    Description: Security Stack Name
-    Type: String
-    MinLength: 1
-    MaxLength: 255
-    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
-    Default: cfnsmpl-sec
-
-
 Resources:
   WpALB:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
@@ -28,7 +19,7 @@ Resources:
         - Fn::ImportValue: !Sub ${BaseStackName}-PubSub1
         - Fn::ImportValue: !Sub ${BaseStackName}-PubSub2
       SecurityGroups: 
-        - Fn::ImportValue: !Sub ${SecStackName}-SecGrpLB
+        - Fn::ImportValue: !Sub ${BaseStackName}-SecGrpLB
 
   LoadBalancerListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
@@ -60,10 +51,10 @@ Outputs:
     Description: ALB DNS Name
     Value: !GetAtt WpALB.DNSName
     Export:
-      Name: !Sub ${AWS::StackName}-WpALBDNS
+      Name: !Sub ${BaseStackName}-WpALBDNS
   
   TargetGroupARN:
     Description: TargetGroup ARN
     Value: !Ref WpALBTargetGroup
     Export:
-      Name: !Sub ${AWS::StackName}-WpTargetGroupARN
+      Name: !Sub ${BaseStackName}-WpTargetGroupARN

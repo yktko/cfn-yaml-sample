@@ -9,29 +9,6 @@ Parameters:
     MaxLength: 255
     AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
     Default: cfnsmpl
-    
-  SecStackName:
-    Description: Security Stack Name
-    Type: String
-    MinLength: 1
-    MaxLength: 255
-    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
-    Default: cfnsmpl-sec
-
-  ALBStackName:
-    Description: ALB Stack Name
-    Type: String
-    MinLength: 1
-    MaxLength: 255
-    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
-    Default: cfnsmpl-alb
-
-  RDSStackName:
-    Description: RDS Stack Name
-    Type: String
-    MinLength: 1
-    MaxLength: 255
-    Default: cfnsmpl-rds
 
   OSImage:
     Description: Base AmazonLinux Image
@@ -65,7 +42,7 @@ Resources:
     Properties:
       ImageId: !Ref OSImage
       SecurityGroups:
-        - Fn::ImportValue: !Sub ${SecStackName}-SecGrpWeb
+        - Fn::ImportValue: !Sub ${BaseStackName}-SecGrpWeb
       InstanceType: t2.micro
       KeyName: !Ref KeyPair
       AssociatePublicIpAddress: true
@@ -92,7 +69,7 @@ Resources:
       MinSize: '1'
       MaxSize: '3'
       TargetGroupARNs:
-        - Fn::ImportValue: !Sub ${ALBStackName}-WpTargetGroupARN
+        - Fn::ImportValue: !Sub ${BaseStackName}-WpTargetGroupARN
     UpdatePolicy:
       AutoScalingRollingUpdate:
         MinInstancesInService: 0

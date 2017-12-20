@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: Sample CFn Template - Security
+Description: Sample CFn Template with YAML - Security
 
 Parameters:
   BaseStackName:
@@ -20,7 +20,7 @@ Resources:
       VpcId:
         Fn::ImportValue: !Sub ${BaseStackName}-VPCID
 
-  SecGrpLB1:
+  SecGrpLBIn1:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       GroupId: !Ref SecGrpLB
@@ -29,6 +29,7 @@ Resources:
       ToPort: 80
       CidrIp: 0.0.0.0/0
 
+
   SecGrpWeb:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -36,22 +37,25 @@ Resources:
       GroupDescription: vpc-ope ssh
       VpcId:
         Fn::ImportValue: !Sub ${BaseStackName}-VPCID
+
   SecGrpWebIn1:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !Ref SecGrpWeb
-      IpProtocol: tcp
-      FromPort: 22
-      ToPort: 22
-      CidrIp: 0.0.0.0/0
-  SecGrpWebIn2:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       GroupId: !Ref SecGrpWeb
       IpProtocol: tcp
       FromPort: 80
       ToPort: 80
-      CidrIp: 0.0.0.0/0
+      SourceSecurityGroupId: !Ref SecGrpLB
+
+  SecGrpWebIn2:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref SecGrpWeb
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      SourceSecurityGroupId: !Ref SecGrpBasion
+
 
   SecGrpDB:
     Type: AWS::EC2::SecurityGroup
@@ -60,6 +64,7 @@ Resources:
       GroupDescription: MySQL
       VpcId:
         Fn::ImportValue: !Sub ${BaseStackName}-VPCID
+
   SecGrpDBIn1:
     Type: AWS::EC2::SecurityGroupIngress
     DependsOn: SecGrpWeb
@@ -70,6 +75,7 @@ Resources:
       ToPort: 3306
       SourceSecurityGroupId: !Ref SecGrpWeb
 
+
   SecGrpBasion:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -77,82 +83,39 @@ Resources:
       GroupDescription: SSH from restricted src
       VpcId:
         Fn::ImportValue: !Sub ${BaseStackName}-VPCID
-  SecGrpWebIn1:
+
+  SecGrpBasionIn1:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       GroupId: !Ref SecGrpBasion
       IpProtocol: tcp
       FromPort: 22
       ToPort: 22
-      CidrIp: 126.147.80.44/32
-      Description: My Home Global
-  SecGrpWebIn2:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !Ref SecGrpBasion
-      IpProtocol: tcp
-      FromPort: 22
-      ToPort: 22
-      CidrIp: 27.0.0.0/16
-      Description: Amazon Internal
-  SecGrpWebIn3:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !Ref SecGrpBasion
-      IpProtocol: tcp
-      FromPort: 22
-      ToPort: 22
-      CidrIp: 54.220.200.0/24
-      Description: Amazon Internal
-  SecGrpWebIn4:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !Ref SecGrpBasion
-      IpProtocol: tcp
-      FromPort: 22
-      ToPort: 22
-      CidrIp: 26.192.0.0/10
-      Description: SoftBank
-  SecGrpWebIn5:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !Ref SecGrpBasion
-      IpProtocol: tcp
-      FromPort: 22
-      ToPort: 22
-      CidrIp: 192.168.3.0/24
-      Description: My Home Private
-  SecGrpWebIn6:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !Ref SecGrpBasion
-      IpProtocol: tcp
-      FromPort: 22
-      ToPort: 22
-      CidrIp: 10.0.0.0/22
-      Description: VPC local
+      CidrIp: 0.0.0.0/0
+      Description: Open to Global
+
 
 Outputs:
   SecGrpWebID:
     Description: Security Group for Web
     Value: !Ref SecGrpWeb
     Export:
-      Name: !Sub ${AWS::StackName}-SecGrpWeb
+      Name: !Sub ${BaseStackName}-SecGrpWeb
 
   SecGrpLBID:
     Description: Security Group for LB
     Value: !Ref SecGrpLB
     Export:
-      Name: !Sub ${AWS::StackName}-SecGrpLB
+      Name: !Sub ${BaseStackName}-SecGrpLB
 
   SecGrpDBID:
     Description: Security Group for DB
     Value: !Ref SecGrpDB
     Export:
-      Name: !Sub ${AWS::StackName}-SecGrpDB
+      Name: !Sub ${BaseStackName}-SecGrpDB
 
   SecGrpBasionID:
     Description: Security Group for Basion
     Value: !Ref SecGrpBasion
     Export:
-      Name: !Sub ${AWS::StackName}-SecGrpBasion
+      Name: !Sub ${BaseStackName}-SecGrpBasion

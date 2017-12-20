@@ -10,14 +10,6 @@ Parameters:
     AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
     Default: cfnsmpl
 
-  SecStackName:
-    Description: Security Stack Name
-    Type: String
-    MinLength: 1
-    MaxLength: 255
-    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
-    Default: cfnsmpl-sec
-
   DBUser:
     Description: Database Master User Name
     Type: String
@@ -49,7 +41,7 @@ Resources:
       MonitoringInterval: 10
       MonitoringRoleArn: !GetAtt DBMonitorRole.Arn
       VPCSecurityGroups:
-        - Fn::ImportValue: !Sub ${SecStackName}-SecGrpDB
+        - Fn::ImportValue: !Sub ${BaseStackName}-SecGrpDB
 
 
 
@@ -83,5 +75,5 @@ Outputs:
     Description: DB Endpoint
     Value: !GetAtt DBInstance.Endpoint.Address
     Export:
-      Name: !Sub ${AWS::StackName}-DBEndpoint
+      Name: !Sub ${BaseStackName}-DBEndpoint
 
