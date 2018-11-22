@@ -1,8 +1,7 @@
 ./cfn-update.sh create cfnbase         cfnsmpl-vpc.yaml
 ./cfn-update.sh create cfnbase-sec     cfnsmpl-sec.yaml      BaseStackName=cfnbase
 ./cfn-update.sh create cfnbase-rds     cfnsmpl-rds.yaml      BaseStackName=cfnbase  DBUser=mydbuser DBPassword=mydbpassword
-./cfn-update.sh create cfnbase-bas-vol cfnsmpl-bas-vol.yaml  BaseStackName=cfnbase  BasionVolumeSnapshot=snap-00cdbf9a99c80eb05 
-./cfn-update.sh create cfnbase-bas     cfnsmpl-basion.yaml   BaseStackName=cfnbase  OSImage=ami-47bf0821 KeyPair=ohmurayu
+./cfn-update.sh create cfnbase-bas     cfnsmpl-basion.yaml   BaseStackName=cfnbase  KeyPair=ohmurayu
 ./cfn-update.sh create cfnbase-alb     cfnsmpl-alb.yaml      BaseStackName=cfnbase
 ./cfn-update.sh create cfnbase-asg     cfnsmpl-asg.yaml      BaseStackName=cfnbase  KeyPair=ohmurayu DBUser=mydbuser DBPassword=mydbpassword
 
@@ -13,7 +12,7 @@
 
 ## Dependency
 # vpc -> sec -> rds
-#        vol -> basion
+#            -> basion
 #            -> alb       -> asg
 
 ## Basion Root Image and Data Volume

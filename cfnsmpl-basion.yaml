@@ -12,10 +12,8 @@ Parameters:
 
   OSImage:
     Description: OS Image
-    Type: String
-    MinLength: 12
-    MaxLength: 12
-    Default: ami-2a69be4c
+    Type : AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
 
   KeyPair:
     Description: KeyPair
@@ -49,16 +47,6 @@ Resources:
     Properties:
       AllocationId: !GetAtt BasionIP.AllocationId
       InstanceId: !Ref BasionSrv
-
-  BasionVolumeAttachment:
-    Type: AWS::EC2::VolumeAttachment
-    DependsOn: BasionSrv
-    Properties:
-      InstanceId: !Ref BasionSrv
-      VolumeId:
-        Fn::ImportValue: !Sub ${BaseStackName}-BasionVolumeID
-      Device: /dev/xvdb
-
 
   BasionIP:
     Type: AWS::EC2::EIP
